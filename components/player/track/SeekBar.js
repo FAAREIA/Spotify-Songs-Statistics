@@ -2,20 +2,13 @@ import React, {useContext} from 'react';
 import {DeviceContext} from '../../App';
 import useCreateRequest from '../../hooks/useCreateRequest';
 
-const msToMmSs = ms => {
-	const minutes = Math.floor(ms / 60000);
-	const seconds = ((ms % 60000) / 1000).toFixed(0);
-
-	return `${minutes}:${seconds.padStart(2, '0')}`;
-}
-
 const SeekBar = props => {
 	const {duration, isPlaybackIntervalRenew, progress} = props;
 
 	const device = useContext(DeviceContext);
 
-	const durationMmSs = msToMmSs(duration);
-	const progressMmSs = msToMmSs(progress);
+	const durationMmSs = device.convertMsToMmSs(duration);
+	const progressMmSs = device.convertMsToMmSs(progress);
 
 	const request = useCreateRequest('PUT', 'me/player/seek');
 
@@ -33,13 +26,17 @@ const SeekBar = props => {
 	}
 
 	return (
-		<>
-		{progressMmSs}
-		<form>
-			<input max={duration} min="0" onChange={handleSeek} step="200" type="range" value={progress} />
-		</form>
-		{durationMmSs}
-		</>
+		<div className="seek-bar">
+			<dl>
+				<dt className="hide">Progress:</dt>
+				<dd className="progress">{progressMmSs}</dd>
+				<dt className="hide">Duration:</dt>
+				<dd className="duration">{durationMmSs}</dd>
+			</dl>
+			<form>
+				<input max={duration} min="0" onChange={handleSeek} step="250" type="range" value={progress} />
+			</form>
+		</div>
 	);
 }
 

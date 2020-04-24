@@ -43,21 +43,21 @@ const Controls = props => {
 	const handleResume = () => fetchEndpoint(requests.resume);
 	const handleShuffle = () => fetchEndpoint(requests.shuffle);
 
+									console.log('- - - - - - Se renderizó: CONTROLS');
 	return (
-		<>
-{console.log('-------------los controles no cacheados')}
-		<button className="shuffle" onClick={handleShuffle} type="button">Shuffle</button>
-		<button className="previous" onClick={handlePrevious} type="button">Prev</button>
-		{
-		(device.isActive === undefined)
-		? <button className="play" onClick={handlePlay} type="button">play</button>
-		: (isPlaying)
-		? <button className="pause" onClick={handlePause} type="button">Pause</button>
-		: <button className="resume" onClick={handleResume} type="button">Resume</button>
-		}
-		<button className="next" onClick={handleNext} type="button">Next</button>
-		<button className="repeat" onClick={handleRepeat} type="button">Repeat</button>
-		</>
+		<ul className="controls">
+			<li><button className="shuffle" onClick={handleShuffle} type="button">Shuffle</button></li>
+			<li><button className="previous" onClick={handlePrevious} type="button">Prev</button></li>
+			{
+			(device.isActive === undefined)
+			? <li><button className="play" onClick={handlePlay} type="button">play</button></li>
+			: (isPlaying)
+			? <li><button className="pause" onClick={handlePause} type="button">Pause</button></li>
+			: <li><button className="resume" onClick={handleResume} type="button">Resume</button></li>
+			}
+			<li><button className="next" onClick={handleNext} type="button">Next</button></li>
+			<li><button className="repeat" onClick={handleRepeat} type="button">Repeat</button></li>
+		</ul>
 	);
 };
 

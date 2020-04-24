@@ -1,14 +1,8 @@
 import React, {useContext, useEffect, useReducer} from 'react';
 import {DeviceContext} from '../../App';
-import PlaylistButton from './PlaylistButton';
-import PlaylistHeader from './PlaylistHeader';
-import PlaylistTracks from './PlaylistTracks';
+import Nav from './Nav/Nav';
+import Playlist from './../playlist/Playlist';
 import useCreateRequest from '../../hooks/useCreateRequest';
-
-const clickEvent = {
-	counter: 0,
-	timeout: null
-}
 
 const initialPlaylists = {
 	list: null,
@@ -30,6 +24,7 @@ const reducer = (playlists, action) => {
 					description: e.description,
 					images: e.images,
 					name: e.name,
+					public: e.public,
 					snapshot: e.snapshot_id,
 					tracksTotal: e.tracks.total,
 					uri: e.uri
@@ -51,16 +46,17 @@ const reducer = (playlists, action) => {
 			const id = payload.id;
 			const list = JSON.parse(JSON.stringify(playlists.list));
 			const loaded = playlists.loaded.slice();
+			const playlist = list[id];
 
-			for (const key in list[id]) {
-				if (key === 'snapshot') list[id][key] = payload.snapshot_id;
-				else if (key === 'tracksTotal') list[id][key] = payload.snapshot_id;
-				else list[id][key] = payload[key];
+			for (const key in playlist) {
+				if (key === 'snapshot') playlist[key] = payload.snapshot_id;
+				else if (key === 'tracksTotal') playlist[key] = payload.tracks.total;
+				else playlist[key] = payload[key];
 			}
 
 			if (loaded.includes(id) === false) loaded.push(payload);
 
-			return {...playlists, list, loaded, visible: id};
+			return {list, loaded, visible: id};
 		}
 		default: {
 			return playlists;
@@ -76,14 +72,12 @@ const Playlists = props => {
 	const device = useContext(DeviceContext);
 
 	const requests = {
-		play: useCreateRequest('PUT', 'me/player/play'),
-		playlist: useCreateRequest('GET', undefined, '?fields=collaborative, description, id, images, name, snapshot_id, tracks.total, uri'),
+		playlist: useCreateRequest('GET', undefined, '?fields=collaborative, description, id, images, name, public, snapshot_id, tracks.total, uri'),
 		playlists: useCreateRequest('GET', 'me/playlists', '?limit=50')
 	}
 
-	const checkPlaylistSnapshot = id => {
+	const checkSnapshot = id => {
 		const dynamicEndpointFragment = `playlists/${id}`;
-		const snapshot = playlists.list[id].snapshot;
 
 		requests.playlist({dynamicEndpointFragment})
 			.then(response => {
@@ -94,94 +88,13 @@ const Playlists = props => {
 			})
 			.then(payload => {
 				const lastSnapshot = payload.snapshot_id;
+				const snapshot = playlists.list[id].snapshot;
 
 				if (lastSnapshot === snapshot) return dispatch({payload: id, type: 'set_visible'});
 				return dispatch({payload, type: 'update_playlist'});
 			})
 			.catch(error => device.catchRequest(error));
 	}
-
-	const createPlaylistButtons = () => {
-		const items = [];
-		const list = playlists.list;
-
-		for (const id in list) {
-			const name = list[id].name;
-			const snapshot = list[id].snapshot;
-			const uri = list[id].uri;
-
-			items.push(<PlaylistButton context={context} key={snapshot} name={name} uri={uri} />)
-		};
-
-		return items;
-	}
-
-	const createPlaylistsData = () => {
-		const items = [];
-
-		playlists.loaded.forEach(id => {
-			const playlist = playlists.list[id];
-
-			const description = playlist.description;
-			const images = playlist.images;
-			const name = playlist.name;
-			const snapshot = playlist.snapshot;
-			const tracksTotal = playlist.tracksTotal;
-			const uri = playlist.uri;
-
-			const header = <PlaylistHeader description={description} images={images} name={name} tracksTotal={tracksTotal} />;
-			const tracks = <PlaylistTracks id={id} />;
-
-			items.push(<div data-id={id} key={snapshot}>{header}{tracks}</div>);
-		});
-
-		return items;
-	}
-
-	const handlePlaylistClick = uri => {
-		const id = uri.split(':').pop();
-		const visible = playlists.visible;
-
-		if (id === visible) return;
-		return checkPlaylistSnapshot(id);
-	}
-
-	const handlePlaylistClickEvents = e => {
-		const target = e.target;
-		const uri = (target.nodeName === 'LI') ? target.children[0].dataset.uri : target.dataset.uri;
-
-		++clickEvent.counter;
-
-		clearTimeout(clickEvent.timeout);
-
-		if (clickEvent.counter === 1) {
-			return clickEvent.timeout = setTimeout(() => {
-				clickEvent.counter = 0;
-				return handlePlaylistClick(uri);
-			}, 500);
-		} else if (clickEvent.counter === 2) {
-			clickEvent.counter = 0;
-			return handlePlaylistDoubleClick(uri);
-		}
-	}
-
-	const handlePlaylistDoubleClick = uri => {
-											console.log('device de double click:', device.isActive);
-		const dynamicBodyContent = {'context_uri': uri};
-		const dynamicParameters = (device.isActive === undefined) ? `?device_id=${device.id}` : '';
-
-		return requests.play({dynamicBodyContent, dynamicParameters})
-			.then(response => {
-				const code = response.status;
-
-				if (code === 204) {
-					handlePlaylistClick(uri);
-					return isPlaybackIntervalRenew();
-				}
-				throw new Error(code);
-			})
-			.catch(error => device.catchRequest(error));
-	};
 
 	useEffect(() => {
 		requests.playlists()
@@ -195,19 +108,43 @@ const Playlists = props => {
 			.catch(error => device.catchRequest(error));
 	}, []);
 
-	const playlistButtons = (playlists.list) ? createPlaylistButtons() : null;
-	const playlistsData = (playlists.loaded.length > 0) ? createPlaylistsData() : null;
+	useEffect(() => {
+		const contextId = device.getIdFromUri(context);
+		const contextType = device.getTypeFromUri(context);
+		const trackId = device.getIdFromUri(track);
+
+		const prevTrack = document.querySelector('.playlist.active li.active');
+		if (prevTrack) prevTrack.classList.remove('active');
+
+		if (contextType === 'playlist') {
+			const activeTrack = document.querySelector(`.playlist[data-id="${contextId}"] li[data-id="${trackId}"]`);
+			if (activeTrack) activeTrack.classList.add('active');
+		}
+	}, [track]);
+
+	const createPlaylists = () => {
+		const items = [];
+		const standarizedContext = device.standarizeUri(context);
+
+		for (const id of playlists.loaded) {
+			const playlist = playlists.list[id];
+			const snapshot = playlist.snapshot;
+			const visible = playlists.visible;
+
+			items.push(<Playlist context={standarizedContext} id={id} key={snapshot} playlist={playlist} visible={visible} />);
+		}
+
+		return items;
+	}
+
+	const loadedPlaylists = (playlists.loaded.length > 0) ? createPlaylists() : null;
 
 	if (playlists.list === null) return <p>Loading playlists...</p>;
 	return (
-		<div id="playlists" data-context={context} data-visible={playlists.visible}>
-			<ul onClick={handlePlaylistClickEvents}>
-				{playlistButtons}
-			</ul>
-			<div>
-				{playlistsData}
-			</div>
-		</div>
+		<section data-context={context} data-track={track} data-visible={playlists.visible} id="playlists">
+			<Nav checkSnapshot={checkSnapshot} context={context} isPlaybackIntervalRenew={isPlaybackIntervalRenew} playlists={playlists.list} visible={playlists.visible} />
+			{loadedPlaylists}
+		</section>
 	);
 }
 

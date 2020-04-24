@@ -16,13 +16,47 @@ const initialDevice = {
 	webApiToken: null
 }
 
-const getAlbumLink = album => 'el album link';
+const convertMsToMmSs = ms => {
+	const minutes = Math.floor(ms / 60000);
+	const seconds = ((ms % 60000) / 1000).toFixed(0);
 
-const getArtistsLinks = artists => artists.map(e => e.name).join(', ');
+	return `${minutes}:${seconds.padStart(2, '0')}`;
+}
+
+const getAlbumLink = album => {
+	const id = getIdFromUri(album.uri);
+	const name = album.name;
+
+	return <button data-url={`album/${id}/`} type="button">{name}</button>;
+};
+
+const getArtistsLinks = artists => {
+	const items = [];
+	const length = artists.length - 1;
+
+	artists.forEach((e, index) => {
+		const comma = (index === length) ? '' : ', ';
+		const id = e.id;
+		const name = e.name;
+
+		items.push(<><button data-url={`artist/${id}/`} type="button">{name}</button>{comma}</>);
+	});
+
+	return items;
+};
 
 const getArtistsNames = artists => artists.map(e => e.name).join(', ');
 
-const getBiggestImage = images => images.sort((a, b) => b.height - a.height)[0];
+const getBiggestImage = images => {
+	if (images.length > 0) return images.sort((a, b) => b.height - a.height)[0];
+
+	const noImage = {height: 0, url: '/img/no-image.svg', width: 0};
+	return noImage;
+};
+
+const getIdFromUri = uri => uri.split(':').pop();
+
+const getTypeFromUri = uri => uri.split(':').splice(-2, 1).pop();
 
 const initiateDevice = dispatch => {
 	return new Promise(resolve => {
@@ -69,7 +103,7 @@ const reducer = (device, action) => {
 		case 'is_active':
 			return (device.isActive === payload) ? device : {...device, isActive: payload};
 		case 'ready':
-			return {...initialDevice, ...action.payload, status: 'ready'};
+			return {...initialDevice, ...payload, status: 'ready'};
 		case 'request_credentials':
 			return {...initialDevice, status: 'credentials'};
 		case 'response_401':
@@ -89,6 +123,13 @@ const reducer = (device, action) => {
 		default:
 			return {...device, error: 'Unknown error...'};
 	}
+}
+
+const standarizeUri = uri => {
+	const id = getIdFromUri(uri);
+	const type = getTypeFromUri(uri);
+
+	return `spotify:${type}:${id}`;
 }
 
 const Device = () => {
@@ -113,13 +154,27 @@ const Device = () => {
 
 	useEffect(() => () => device.player && device.player.disconnect(), [device.player]);
 
+	const contextProviderValue = {
+		...device,
+		catchRequest,
+		convertMsToMmSs,
+		getAlbumLink,
+		getArtistsLinks,
+		getArtistsNames,
+		getBiggestImage,
+		getIdFromUri,
+		getTypeFromUri,
+		setIsActive,
+		standarizeUri
+	}
+
 	if (device.status === 'loading') return <p>Loading...</p>;
 	if (device.status === 'credentials') return (<>{isError} <Login /></>);
 	if (device.status === 'ready') {
 		return (
 			<>
 			{isError}
-			<DeviceContext.Provider value={{...device, catchRequest, getAlbumLink, getArtistsLinks, getArtistsNames, getBiggestImage, setIsActive}}>
+			<DeviceContext.Provider value={contextProviderValue}>
 				<Player />
 			</DeviceContext.Provider>
 			</>

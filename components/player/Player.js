@@ -177,11 +177,11 @@ const Player = () => {
 	if (device.isActive === null) return <p>Loading...</p>;
 	return (
 		<>
-		<div>
+		<section id="track">
 			<Album artists={track.artists} images={track.album.images} name={track.album.name} trackName={track.name} trackUri={track.uri} />
 			<Controls context={track.context} hasTrackStarted={hasTrackStartedRef.current} isPlaybackIntervalRenew={isPlaybackIntervalRenew} isPlaying={controls.isPlaying} repeat={controls.repeat} shuffle={controls.shuffle} trackUri={track.uri} volume={controls.volume} />
 			<SeekBar duration={track.duration} isPlaybackIntervalRenew={isPlaybackIntervalRenew} progress={track.progress} />
-		</div>
+		</section>
 		<Playlists context={track.context} isPlaybackIntervalRenew={isPlaybackIntervalRenew} track={track.uri} />
 		</>
 	);
