@@ -30,16 +30,15 @@ const getAlbumLink = album => {
 	return <button data-url={`album/${id}/`} type="button">{name}</button>;
 };
 
-const getArtistsLinks = artists => {
+const getArtistsLinks = (artists, extraKey) => {
 	const items = [];
-	const length = artists.length - 1;
 
 	artists.forEach((e, index) => {
-		const comma = (index === length) ? '' : ', ';
 		const id = e.id;
+		const key = `${id}:${extraKey}`;
 		const name = e.name;
 
-		items.push(<><button data-url={`artist/${id}/`} type="button">{name}</button>{comma}</>);
+		items.push(<button data-url={`artist/${id}/`} key={key} type="button">{name}</button>);
 	});
 
 	return items;

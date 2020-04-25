@@ -11,6 +11,7 @@ const Header = props => {
 	const isDescription = (description) ? <><dt className="hide">Description:</dt><dd className="description">{description}</dd></> : null;
 	const isPublicPrivate = (publicPrivate) ? 'Public' : 'Private';
 
+						console.log('- - - - - - Se renderizó: HEADER');
 	return (
 		<header>
 			<h2>{name}</h2>

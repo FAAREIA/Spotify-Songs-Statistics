@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useReducer, useRef} from 'react';
+import React, {useCallback, useContext, useEffect, useReducer, useRef} from 'react';
 import {DeviceContext} from '../App';
 import Album from './track/Album';
 import Controls from './track/Controls';
@@ -139,7 +139,7 @@ const Player = () => {
 
 	const getPlayback = () => getLocalPlayback().catch(error => device.catchRequest(error));
 
-	const isPlaybackIntervalRenew = (timeout = 800) => (isDeviceActiveRef.current) ? false : setTimeout(playbackIntervalRenew, timeout);
+	const isPlaybackIntervalRenew = useCallback(() => (device.isActive) ? false : setTimeout(playbackIntervalRenew, 800), [device.isActive]);
 
 	const playbackIntervalRenew = () => {
 		const delay = (isDeviceActiveRef.current && !document.hidden) ? 1000 : 75000;

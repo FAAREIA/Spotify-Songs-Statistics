@@ -6,7 +6,7 @@ const Album = props => {
 
 	const device = useContext(DeviceContext);
 
-	const artistsLinks = device.getArtistsLinks(artists);
+	const artistsLinks = device.getArtistsLinks(artists, 'album');
 	const artistsNames = device.getArtistsNames(artists);
 	const image = device.getBiggestImage(images);
 
@@ -14,7 +14,7 @@ const Album = props => {
 	return (
 		<header className="album">
 			<h2>{name}</h2>
-			<dl>
+			<dl key={name}>
 				<dt className="hide">Artists:</dt>
 				<dd>{artistsLinks}</dd>
 				<dt className="hide">Track:</dt>

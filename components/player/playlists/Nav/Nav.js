@@ -15,14 +15,13 @@ const Nav = props => {
 
 	const createButtons = () => {
 		const items = [];
-		const standarizedContext = device.standarizeUri(context);
 
 		for (const id in playlists) {
 			const name = playlists[id].name;
 			const snapshot = playlists[id].snapshot;
 			const uri = playlists[id].uri;
 
-			items.push(<Button context={standarizedContext} id={id} key={snapshot} name={name} uri={uri} visible={visible} />);
+			items.push(<Button context={context} id={id} key={snapshot} name={name} uri={uri} visible={visible} />);
 		};
 
 		return items;

@@ -7,7 +7,7 @@ const initialState = 'playlist';
 const Playlist = props => {
 	const [state, setState] = useState(initialState);
 
-	const {context, id, playlist, visible} = props;
+	const {context, id, isPlaybackIntervalRenew, playlist, visible} = props;
 
 	const collaborative = playlist.collaborative;
 	const description = playlist.description;
@@ -25,10 +25,11 @@ const Playlist = props => {
 		else setState(initialState);
 	}, [context, uri, visible]);
 
+							console.log('- - - - - - Se renderizó: ONE PLAYLIST');
 	return (
 		<article className={state} data-id={id} key={snapshot}>
 			<Header collaborative={collaborative} description={description} images={images} name={name} publicPrivate={publicPrivate} tracksTotal={tracksTotal} />
-			<Tracks id={id} />
+			<Tracks isPlaybackIntervalRenew={isPlaybackIntervalRenew} playlistUri={uri} />
 		</article>
 	);
 }

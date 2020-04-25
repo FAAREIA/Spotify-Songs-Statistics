@@ -76,6 +76,8 @@ const Playlists = props => {
 		playlists: useCreateRequest('GET', 'me/playlists', '?limit=50')
 	}
 
+	const standarizedContext = device.standarizeUri(context);
+
 	const checkSnapshot = id => {
 		const dynamicEndpointFragment = `playlists/${id}`;
 
@@ -111,27 +113,25 @@ const Playlists = props => {
 	useEffect(() => {
 		const contextId = device.getIdFromUri(context);
 		const contextType = device.getTypeFromUri(context);
-		const trackId = device.getIdFromUri(track);
 
 		const prevTrack = document.querySelector('.playlist.active li.active');
 		if (prevTrack) prevTrack.classList.remove('active');
 
 		if (contextType === 'playlist') {
-			const activeTrack = document.querySelector(`.playlist[data-id="${contextId}"] li[data-id="${trackId}"]`);
+			const activeTrack = document.querySelector(`.playlist[data-id="${contextId}"] li[data-uri="${track}"]`);
 			if (activeTrack) activeTrack.classList.add('active');
 		}
 	}, [track]);
 
 	const createPlaylists = () => {
 		const items = [];
-		const standarizedContext = device.standarizeUri(context);
 
 		for (const id of playlists.loaded) {
 			const playlist = playlists.list[id];
 			const snapshot = playlist.snapshot;
 			const visible = playlists.visible;
 
-			items.push(<Playlist context={standarizedContext} id={id} key={snapshot} playlist={playlist} visible={visible} />);
+			items.push(<Playlist context={standarizedContext} id={id} isPlaybackIntervalRenew={isPlaybackIntervalRenew} key={snapshot} playlist={playlist} visible={visible} />);
 		}
 
 		return items;
@@ -139,13 +139,21 @@ const Playlists = props => {
 
 	const loadedPlaylists = (playlists.loaded.length > 0) ? createPlaylists() : null;
 
+							console.log('- - - - - - Se renderizó: PLAYLISTS');
 	if (playlists.list === null) return <p>Loading playlists...</p>;
 	return (
-		<section data-context={context} data-track={track} data-visible={playlists.visible} id="playlists">
-			<Nav checkSnapshot={checkSnapshot} context={context} isPlaybackIntervalRenew={isPlaybackIntervalRenew} playlists={playlists.list} visible={playlists.visible} />
+		<section data-context={standarizedContext} data-track={track} data-visible={playlists.visible} id="playlists">
+			<Nav checkSnapshot={checkSnapshot} context={standarizedContext} isPlaybackIntervalRenew={isPlaybackIntervalRenew} playlists={playlists.list} visible={playlists.visible} />
 			{loadedPlaylists}
 		</section>
 	);
 }
 
-export default Playlists;
+const areEqual = (prevProps, props) => {
+	if (prevProps.context !== props.context) return false;
+	if (prevProps.isPlaybackIntervalRenew !== props.isPlaybackIntervalRenew) return false;
+	if (prevProps.track !== props.track) return false;
+	return true;
+};
+
+export default React.memo(Playlists, areEqual);
