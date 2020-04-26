@@ -1,12 +1,15 @@
 import React, {createContext, useEffect, useReducer} from 'react';
-import Error from './error/Error';
+import Errors from './errors/Errors';
 import Login from './login/Login';
 import Player from './player/Player';
 
 const DeviceContext = createContext();
 
 const initialDevice = {
-	error: null,
+	error: {
+		id: null,
+		message: null
+	},
 	id: null,
 	isActive: null,
 	name: null,
@@ -95,6 +98,10 @@ const isSpotifyLoaded = () => {
 }
 
 const reducer = (device, action) => {
+	const error = {
+		id: Math.random(),
+		message: null
+	};
 	const payload = action.payload;
 	const type = action.type;
 
@@ -106,21 +113,23 @@ const reducer = (device, action) => {
 		case 'request_credentials':
 			return {...initialDevice, status: 'credentials'};
 		case 'response_401':
-			sessionStorage.removeItem('deviceToken');
-			return {...initialDevice, error: 'Authorization has been refused for those credentials.', status: 'credentials'};
-		case 'response_404':
-			return {...device, error: 'Seems that there is no active device...'};
-		case 'response_408':
-			return {...device, error: 'Request timeout. Trying again...'};
-		case 'response_429':
-			return {...device, error: 'Too Many Requests. Rate limiting has been applied.'};
 		case 'revoke_credentials':
+			error.message = (type === 'response_401') ? 'Authorization has been refused for those credentials.' : action.error;
+
 			sessionStorage.removeItem('deviceToken');
-			return {...initialDevice, error: action.error, status: 'credentials'};
+			return {...initialDevice, error, status: 'credentials'};
+		case 'response_404':
+		case 'response_408':
+		case 'response_429':
 		case 'show_error':
-			return {...device, error: action.error};
 		default:
-			return {...device, error: 'Unknown error...'};
+			if (type === 'response_404') error.message = 'Seems that there is no active device...';
+			else if (type === 'response_408') error.message = 'Request timeout. Trying again...';
+			else if (type === 'response_429') error.message = 'Too Many Requests. Rate limiting has been applied.';
+			else if (type === 'show_error') error.message = action.error;
+			else error.message = 'Unknown error...';
+
+			return {...device, error};
 	}
 }
 
@@ -133,8 +142,6 @@ const standarizeUri = uri => {
 
 const Device = () => {
 	const [device, dispatch] = useReducer(reducer, initialDevice);
-
-	const isError = (device.error) ? <Error error={device.error} /> : null;
 
 	const catchRequest = error => {
 		const code = (error.name === 'AbortError') ? 408 : error.message;
@@ -153,6 +160,8 @@ const Device = () => {
 
 	useEffect(() => () => device.player && device.player.disconnect(), [device.player]);
 
+	const areErrors = (device.error.id) ? <Errors id={device.error.id} message={device.error.message} /> : null;
+
 	const contextProviderValue = {
 		...device,
 		catchRequest,
@@ -168,14 +177,14 @@ const Device = () => {
 	}
 
 	if (device.status === 'loading') return <p>Loading...</p>;
-	if (device.status === 'credentials') return (<>{isError} <Login /></>);
+	if (device.status === 'credentials') return (<><Login /> {areErrors}</>);
 	if (device.status === 'ready') {
 		return (
 			<>
-			{isError}
 			<DeviceContext.Provider value={contextProviderValue}>
 				<Player />
 			</DeviceContext.Provider>
+			{areErrors}
 			</>
 		);
 	}
