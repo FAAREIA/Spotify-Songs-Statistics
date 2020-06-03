@@ -5,7 +5,7 @@ import useCreateRequest from '../../hooks/useCreateRequest';
 const initialState = {
 	attemps: 0,
 	error: false,
-	fields: 'items(track(album(name, uri), artists(name, uri), duration_ms, id, name, track_number, uri)), next',
+	fields: 'items(added_at, track(album(name, uri), artists(name, uri), duration_ms, id, name, track_number, uri)), next',
 	limit: 100,
 	loaded: false,
 	offset: 0,
@@ -57,7 +57,7 @@ const Tracks = props => {
 
 	const requests = {
 		play: useCreateRequest('PUT', 'me/player/play'),
-		playlistTracks: useCreateRequest('GET', `playlists/${playlistId}/tracks`, `?fields=${state.fields}&limit=${state.limit}&offset=${state.offset}`)
+		playlistTracks: useCreateRequest('GET', `playlists/${playlistId}/tracks`, `?fields=${state.fields}&limit=${state.limit}&market=from_token&offset=${state.offset}`)
 	}
 
 	const createTracksList = payload => {
@@ -65,18 +65,13 @@ const Tracks = props => {
 
 		for (const track of payload) {
 			items.push(
-				<li data-uri={track.uri} key={`${playlistUri}:${track.id}`}>
-					<dl>
-						<dt className="hide">Name:</dt>
-						<dd>{track.name}</dd>
-						<dt className="hide">Artists:</dt>
-						<dd className="artists">{device.getArtistsLinks(track.artists, track.id)}</dd>
-						<dt className="hide">Album:</dt>
-						<dd className="album">{device.getAlbumLink(track.album)}</dd>
-						<dt className="hide">Duration:</dt>
-						<dd>{device.convertMsToMmSs(track.duration_ms)}</dd>
-					</dl>
-				</li>
+				<tr data-uri={track.uri} key={`${playlistUri}:${track.id}`}>
+					<td className="track">{track.name}</td>
+					<td className="artists">{device.getArtistsLinks(track.artists, track.id)}</td>
+					<td className="album">{device.getAlbumLink(track.album)}</td>
+					<td className="added-date">{track.added_at}</td>
+					<td className="duration">{device.convertMsToMmSs(track.duration_ms)}</td>
+				</tr>
 			);
 		}
 
@@ -94,6 +89,8 @@ const Tracks = props => {
 			.then(payload => {
 				const tracks = payload.items.map(e => e.track);
 
+				tracks.forEach((track, index) => track.added_at = payload.items[index].added_at);
+
 				if (tracks.length === 0) return dispatch({type: 'no_tracks'});
 				if (payload.next) return dispatch({payload: tracks, type: 'set_next'});
 				return dispatch({payload: tracks, type: 'set_loaded'});
@@ -106,7 +103,7 @@ const Tracks = props => {
 
 	const handlePlayTrack = e => {
 		const target = e.target;
-		const trackUri = (target.nodeName === 'LI') ? target.dataset.uri : target.closest('li').dataset.uri;
+		const trackUri = (target.nodeName === 'TR') ? target.dataset.uri : target.closest('tr').dataset.uri;
 
 		const dynamicBodyContent = {'context_uri': playlistUri, 'offset': {'uri': trackUri}};
 		const dynamicParameters = (device.isActive === undefined) ? `?device_id=${device.id}` : '';
@@ -141,7 +138,26 @@ const Tracks = props => {
 	}
 	if (state.loaded === false) return <div className="tracks loading"><p>Loading playlist tracks...</p></div>;
 	if (state.loaded === undefined) return <div className="tracks empty"><p>Empty playlist...</p></div>;
-	if (state.loaded) return <div className="tracks"><ol onDoubleClick={handlePlayTrack}>{tracksList}</ol></div>;
+	if (state.loaded) {
+		return (
+			<div className="tracks">
+				<table>
+					<thead>
+						<tr>
+							<th className="heading-text">Track</th>
+							<th className="heading-text">Artist</th>
+							<th className="heading-text">Album</th>
+							<th className="heading-text">Date</th>
+							<th className="heading-text duration">Duration</th>
+						</tr>
+					</thead>
+					<tbody onDoubleClick={handlePlayTrack}>
+						{tracksList}
+					</tbody>
+				</table>
+			</div>
+		)
+	}
 }
 
 export default Tracks;

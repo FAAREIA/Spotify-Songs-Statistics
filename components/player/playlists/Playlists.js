@@ -114,11 +114,11 @@ const Playlists = props => {
 		const contextId = device.getIdFromUri(context);
 		const contextType = device.getTypeFromUri(context);
 
-		const prevTrack = document.querySelector('.playlist.active li.active');
+		const prevTrack = document.querySelector('.playlist.active tr.active');
 		if (prevTrack) prevTrack.classList.remove('active');
 
 		if (contextType === 'playlist') {
-			const activeTrack = document.querySelector(`.playlist[data-id="${contextId}"] li[data-uri="${track}"]`);
+			const activeTrack = document.querySelector(`.playlist[data-id="${contextId}"] tr[data-uri="${track}"]`);
 			if (activeTrack) activeTrack.classList.add('active');
 		}
 	}, [track]);
@@ -142,7 +142,7 @@ const Playlists = props => {
 							console.log('- - - - - - Se renderizó: PLAYLISTS');
 	if (playlists.list === null) return <p>Loading playlists...</p>;
 	return (
-		<section data-context={standarizedContext} data-track={track} data-visible={playlists.visible} id="playlists">
+		<section className="grid" data-context={standarizedContext} data-track={track} data-visible={playlists.visible} id="playlists">
 			<Nav checkSnapshot={checkSnapshot} context={standarizedContext} isPlaybackIntervalRenew={isPlaybackIntervalRenew} playlists={playlists.list} visible={playlists.visible} />
 			{loadedPlaylists}
 		</section>

@@ -13,15 +13,15 @@ const Album = props => {
 							console.log('- - - - - - Se renderizó: ALBUM');
 	return (
 		<header className="album">
-			<h2>{name}</h2>
+			<h2 className="hide">{name}</h2>
 			<dl key={name}>
-				<dt className="hide">Artists:</dt>
-				<dd>{artistsLinks}</dd>
 				<dt className="hide">Track:</dt>
-				<dd>{trackName}</dd>
+				<dd className="track">{trackName}</dd>
+				<dt className="hide">Artists:</dt>
+				<dd className="artist">{artistsLinks}</dd>
 			</dl>
 			<div className="image">
-				<img alt={`${name} - ${artistsNames}`} height={image.height} src={image.url} width={image.width} />
+				<img alt={`${name} - ${artistsNames}`} className="img-cover" height={image.height} src={image.url} width={image.width} />
 			</div>
 		</header>
 	);

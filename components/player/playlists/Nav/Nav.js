@@ -56,11 +56,14 @@ const Nav = props => {
 
 								console.log('- - - - - - Se renderizó: NAV');
 	return (
-		<nav className="nav">
-			<ul onClick={handleClickEvents}>
-				{createButtons()}
-			</ul>
-		</nav>
+		<aside className="playlists-aside">
+			<h2 className="heading-text">My Playlists</h2>
+			<nav className="playlists-nav">
+				<ul onClick={handleClickEvents}>
+					{createButtons()}
+				</ul>
+			</nav>
+		</aside>
 	);
 }
 

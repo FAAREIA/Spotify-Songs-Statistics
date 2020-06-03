@@ -63,7 +63,7 @@ const Errors = props => {
 	useEffect(() => {
 		portal = document.createElement('div');
 
-		portal.setAttribute('id', 'error');
+		portal.setAttribute('class', 'alert error fixed');
 		document.body.appendChild(portal);
 
 		dispatch({type: 'dom_ready'});

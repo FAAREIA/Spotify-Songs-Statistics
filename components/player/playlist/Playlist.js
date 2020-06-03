@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import Header from './Header';
+import SearchForm from '../../search/Form';
 import Tracks from './Tracks';
 
 const initialState = 'playlist';
@@ -25,10 +26,11 @@ const Playlist = props => {
 		else setState(initialState);
 	}, [context, uri, visible]);
 
-							console.log('- - - - - - Se renderizó: ONE PLAYLIST');
+				console.log('- - - - - - Se renderizó: ONE PLAYLIST:');
 	return (
-		<article className={state} data-id={id} key={snapshot}>
-			<Header collaborative={collaborative} description={description} images={images} name={name} publicPrivate={publicPrivate} tracksTotal={tracksTotal} />
+		<article className={state} data-id={id}>
+			<Header collaborative={collaborative} description={description} images={images} isPlaybackIntervalRenew={isPlaybackIntervalRenew} name={name} playlistUri={uri} publicPrivate={publicPrivate} tracksTotal={tracksTotal} />
+			<SearchForm placeholder="Search artists, albums and tracks" />
 			<Tracks isPlaybackIntervalRenew={isPlaybackIntervalRenew} playlistUri={uri} />
 		</article>
 	);
